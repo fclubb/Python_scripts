@@ -7,7 +7,7 @@ import shapefile
 #from osgeo import gdal
 
 #Read in the shapefile
-r = shapefile.Reader('Flood_zones_clip')
+r = shapefile.Reader('Flood_zones_clip2')
 
 #Create a new shapefile in memory
 w = shapefile.Writer()
@@ -35,6 +35,6 @@ print w.records
 w._shapes.extend(r.shapes())
 
 #Save as a new shapefile
-new_shapefile = 'Flood_zones_clip_binary'
+new_shapefile = 'Flood_zones_clip2_binary'
 w.save(new_shapefile)
 

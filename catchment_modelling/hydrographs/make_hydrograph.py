@@ -12,7 +12,7 @@ Fiona Clubb
 #import modules
 import numpy as np, matplotlib.pyplot as plt
     
-def make_hydrograph(field_site, duration):
+def make_hydrograph(field_site, duration, plot_title, return_period):
     """
     Makes plot of the flood hydrograph from LSDCatchmentModel
     
@@ -20,6 +20,7 @@ def make_hydrograph(field_site, duration):
     #import modules
     from glob import glob
     from matplotlib import rcParams
+    import operator
     
     # Set up fonts
     rcParams['font.family'] = 'sans-serif'
@@ -28,7 +29,7 @@ def make_hydrograph(field_site, duration):
     
     # Read in the data
     DataDirectory = './'
-    FileName = field_site+'_catchment_'+str(duration)+'hr.dat'
+    FileName = field_site+'_catchment_'+str(duration)+'hr_'+str(return_period)+'yr.dat'
     f = open(DataDirectory+FileName, 'r')
     lines = f.readlines()
     no_lines = len(lines)
@@ -38,35 +39,40 @@ def make_hydrograph(field_site, duration):
     discharge = np.zeros(no_lines)    
     
     for i in range (no_lines):
-        line = lines.strip().split(' ')
+        line = lines[i].strip().split(' ')
         time_step[i] = int(line[0])
-        discharge[i] = float(line[1])
-        
-    #convert the discharge to mm
-    discharge_mm = discharge*1000
-    
+        discharge[i] = float(line[2])
+            
     # Now make the plot
     fig = plt.figure(1, facecolor='white', figsize=(7,5))
     
-    ax = fig.add_suplot(111)
-    ax.plot(time_step, discharge_mm, lw=2)
+    ax = fig.add_subplot(111)
+    ax.plot(time_step, discharge, lw=2)
         
     ax.set_xlabel('Time (hours)', fontsize=14)
-    ax.set_ylabel('Discharge at outlet (mm)', fontsize=14)
+    ax.set_ylabel('Discharge at outlet (m$^3$/s)', fontsize=14)
+    ax.set_title(plot_title)
     
     # Save figure
-    OutputFigureName = field_site+'_flood_hydrograph_'+str(duration)+'hr'
+    OutputFigureName = field_site+'_flood_hydrograph_'+str(duration)+'hr_'+str(return_period)+'yr'
     OutputFigureFormat = 'pdf'
     plt.savefig(OutputFigureName + '.' + OutputFigureFormat, format=OutputFigureFormat)
+    
+    index, value = max(enumerate(discharge), key=operator.itemgetter(1))
+    print 'Maximum discharge is', value, 'cumecs at', time_step[index], 'hours'
    
 if __name__ == "__main__":
     
     # Set the name of the field site
-    field_site = 'mid_bailey_run'
+    field_site = 'swale'
+    plot_title = 'River Swale, UK'
     
     # Set the duration of the storm
     duration = 6
     
-    make_hydrograph(field_site, duration)
+    # Set the return period
+    return_period = 100
+    
+    make_hydrograph(field_site, duration, plot_title, return_period)
 
 
