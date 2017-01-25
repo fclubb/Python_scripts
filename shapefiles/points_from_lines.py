@@ -5,6 +5,15 @@ FJC
 """
 
 def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_shapefile, epsg_code):
+    """
+    Interpolate a series of points at equal distances along an input line shapefile. Arguments that need
+    to be supplied are:
+    * DataDirectory: the directory of the input/output shapefiles
+    * baseline_shapefile: the name of the input line shapefile with extension
+    * distance: the distance to place points at
+    * output_shapefile: the name of the output points shapefile with extension
+    * epsg_code: the EPSG code to specify the coordinate system for the output shapefile
+    """
 
     from fiona import collection
     from fiona.crs import from_epsg
