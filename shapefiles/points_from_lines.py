@@ -15,7 +15,6 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
     """
 
     from fiona import collection
-    from fiona.crs import from_epsg
     from shapely.geometry import shape, Point, MultiLineString, mapping
 
     lines = []
@@ -34,10 +33,11 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
         print "\tNot a valid distance, sorry pal!"
 
     # get the points at the specified distance along the line
-    temp_distance = distance
+    temp_distance = 0
     n_points = int(total_distance/distance)
     print "The total distance is", total_distance, ": returning ", n_points, "points"
-    for j in range(n_points):
+    # have a point at the start of the line
+    for j in range(n_points+1):
         point = line.interpolate(temp_distance)
         points.append(Point(point))
         distances.append(temp_distance)
@@ -48,12 +48,11 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
 
     # write the points to a shapefile
     with collection(DataDirectory+output_shapefile, 'w', crs=crs, driver='ESRI Shapefile', schema=schema) as output:
-        for i in range (n_points):
+        for i in range (n_points+1):
             #print point
             output.write({'properties':{'distance':distances[i]},'geometry': mapping(points[i])})
 
 if __name__ == '__main__':
 
     DataDirectory = '/home/s0923330/Datastore/DEMs_for_analysis/eel_river/'
-    #DataDirectory = 'Z:\\5m_dems\\scotland\\Catchment_boundaries\\'
-    get_points_along_line(DataDirectory,baseline_shapefile='Eel_baseline.shp',distance=1,output_shapefile='Eel_baseline_points.shp')
+    get_points_along_line(DataDirectory,baseline_shapefile='Eel_baseline.shp',distance=100,output_shapefile='Eel_baseline_points_100m.shp')
