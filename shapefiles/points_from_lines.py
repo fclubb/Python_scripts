@@ -4,7 +4,7 @@ FJC
 24/01/17
 """
 
-def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_shapefile, epsg_code):
+def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_shapefile):
     """
     Interpolate a series of points at equal distances along an input line shapefile. Arguments that need
     to be supplied are:
@@ -12,7 +12,6 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
     * baseline_shapefile: the name of the input line shapefile with extension
     * distance: the distance to place points at
     * output_shapefile: the name of the output points shapefile with extension
-    * epsg_code: the EPSG code to specify the coordinate system for the output shapefile
     """
 
     from fiona import collection
@@ -26,7 +25,8 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
     c = collection(DataDirectory+baseline_shapefile, 'r')
     rec = c.next()
     line = MultiLineString(shape(rec['geometry']))
-    #print line
+    # get the coordinate system from the input shapefile
+    crs = c.crs
 
     total_distance = line.length
     # handle exceptions
@@ -47,7 +47,7 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
     schema={'geometry': 'Point', 'properties': {'distance': 'float'} }
 
     # write the points to a shapefile
-    with collection(DataDirectory+output_shapefile, 'w', crs=from_epsg(epsg_code), driver='ESRI Shapefile', schema=schema) as output:
+    with collection(DataDirectory+output_shapefile, 'w', crs=crs, driver='ESRI Shapefile', schema=schema) as output:
         for i in range (n_points):
             #print point
             output.write({'properties':{'distance':distances[i]},'geometry': mapping(points[i])})
@@ -56,4 +56,4 @@ if __name__ == '__main__':
 
     DataDirectory = '/home/s0923330/Datastore/DEMs_for_analysis/eel_river/'
     #DataDirectory = 'Z:\\5m_dems\\scotland\\Catchment_boundaries\\'
-    get_points_along_line(DataDirectory,baseline_shapefile='Eel_baseline.shp',distance=1,output_shapefile='Eel_baseline_points.shp',epsg_code=32610)
+    get_points_along_line(DataDirectory,baseline_shapefile='Eel_baseline.shp',distance=1,output_shapefile='Eel_baseline_points.shp')
