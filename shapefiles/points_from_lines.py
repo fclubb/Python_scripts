@@ -4,38 +4,47 @@ FJC
 24/01/17
 """
 
-def get_points_along_line(DataDirectory, baseline_shapefile, distance):
+def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_shapefile, epsg_code):
 
     from fiona import collection
-    from shapely.geometry import shape, Point, MultiLineString
+    from fiona.crs import from_epsg
+    from shapely.geometry import shape, Point, MultiLineString, mapping
 
     lines = []
     points = []
+    distances = []
     # read in the baseline shapefile
-    with collection(DataDirectory+baseline_shapefile, 'r') as input:
-        for f in input:
-            lines.append(MultiLineString(shape(f['geometry'])))
+    c = collection(DataDirectory+baseline_shapefile, 'r')
+    rec = c.next()
+    line = MultiLineString(shape(rec['geometry']))
     #print line
 
-    for line in lines:
-        total_distance = line.length
-        # handle exceptions
-        if distance < 0.0 or distance >= total_distance:
-            print "\tNot a valid distance, sorry pal!"
+    total_distance = line.length
+    # handle exceptions
+    if distance < 0.0 or distance >= total_distance:
+        print "\tNot a valid distance, sorry pal!"
 
-        # get the points at the specified distance along the line
-        temp_distance = distance
-        n_points = int(total_distance/distance)
-        print "The total distance is", total_distance, ", returning ", n_points, "points"
-        for j in range(n_points):
-            point = line.interpolate(temp_distance)
-            print point
-            temp_distance+=distance
+    # get the points at the specified distance along the line
+    temp_distance = distance
+    n_points = int(total_distance/distance)
+    print "The total distance is", total_distance, ": returning ", n_points, "points"
+    for j in range(n_points):
+        point = line.interpolate(temp_distance)
+        points.append(Point(point))
+        distances.append(temp_distance)
+        temp_distance+=distance
 
+    #output schema
+    schema={'geometry': 'Point', 'properties': {'distance': 'float'} }
 
+    # write the points to a shapefile
+    with collection(DataDirectory+output_shapefile, 'w', crs=from_epsg(epsg_code), driver='ESRI Shapefile', schema=schema) as output:
+        for i in range (n_points):
+            #print point
+            output.write({'properties':{'distance':distances[i]},'geometry': mapping(points[i])})
 
 if __name__ == '__main__':
 
     DataDirectory = '/home/s0923330/Datastore/DEMs_for_analysis/eel_river/'
     #DataDirectory = 'Z:\\5m_dems\\scotland\\Catchment_boundaries\\'
-    get_points_along_line(DataDirectory,baseline_shapefile='Eel_baseline.shp',distance=1)
+    get_points_along_line(DataDirectory,baseline_shapefile='Eel_baseline.shp',distance=1,output_shapefile='Eel_baseline_points.shp',epsg_code=32610)
