@@ -15,7 +15,8 @@ import matplotlib.cm as cmx
 import seaborn as sns
 import matplotlib.colors as colors
 from rand_cmap import rand_cmap
-from adjustText import adjust_text
+from matplotlib import gridspec
+#from adjustText import adjust_text
 
 def cm2inch(value):
     return value/2.54
@@ -34,18 +35,18 @@ def read_all_data(DataDirectory,DEM_prefix):
     print "Number of lines: ", no_lines
 
     # Set up the arrays
-    patch_id = np.zeros(no_lines)             # patch_id
-    upstream_distance = np.zeros(no_lines)    # distance upstream
-    channel_relief = np.zeros(no_lines)       # channel relief
+    patch_id = []
+    upstream_distance = []
+    channel_relief = []
 
     for i in range (no_lines):
         line = lines[i].strip().split(" ")
         if np.isnan(float(line[1])) == False:
-            patch_id[i] = int(line[0])
-            channel_relief[i] = float(line[1])
-            upstream_distance[i] = float(line[2])
+            patch_id.append(int(line[0]))
+            channel_relief.append(float(line[1]))
+            upstream_distance.append(float(line[2]))
 
-    upstream_distance = upstream_distance/1000
+    upstream_distance = [x / 1000 for x in upstream_distance]
     return patch_id, upstream_distance, channel_relief
 
 def read_binned_data(DataDirectory,DEM_prefix):
@@ -103,31 +104,38 @@ def make_terrace_plots(DataDirectory,DEM_prefix,field_site):
 #    for i in range (n_points):
 #        if mean_relief[i]
 
+    # add the XY Plot
     new_cmap = rand_cmap(len(patch_id),type='bright',first_color_black=False,last_color_black=False,verbose=False)
-    # make plots
-    #sns.set_palette("Paired", 4)
-    fig = plt.figure(1, facecolor='white', figsize=(cm2inch(22),cm2inch(12)))
-    ax = fig.add_subplot(111)
-    ax.scatter(upstream_distance, channel_relief, s=20, c=patch_id, cmap=new_cmap, lw=0.5)
-    #plt.errorbar(mean_distance, mean_relief, xerr=stdev_distance, yerr=stdev_relief, fmt='None', ecolor='0.5', elinewidth=1, markersize=3, capsize=1)
-    #plt.scatter(mean_distance, mean_relief, c=mean_relief, cmap=cmx.Blues)
+    fig = plt.figure(1, facecolor='white', figsize=(cm2inch(22),cm2inch(15)))
+    # set ratios for subplots
+    gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
+    ax = fig.add_subplot(gs[0])
+    ax.scatter(upstream_distance, channel_relief, s=40, c=patch_id, cmap=new_cmap, lw=1)
     plt.xlabel('Distance upstream along main stem (km)')
     plt.ylabel('Elevation compared to main stem (m)')
     plt.xlim(0,np.max(upstream_distance)+1)
     plt.ylim(0,50)
     plt.title(field_site)
     # add labels for the catchment IDs
-    labels = [str(int(x)) for x in patch_id]
-    print labels
-    for label, x, y in zip(labels,upstream_distance,channel_relief):
-        texts = ax.text(x,y,label)
-    adjust_text(texts, force_text=0.05)
+    # labels = [str(int(x)) for x in patch_id]
+    # print labels
+    # for label, x, y in zip(labels,upstream_distance,channel_relief):
+    #     ax.text(x,y,label)
+    #adjust_text(texts, force_text=0.05)
 
+    # add the histogram of terrace elevations
+    ax2 = fig.add_subplot(gs[1])
+    n, bins, patches = ax2.hist(channel_relief, bins=50, normed=1, orientation='horizontal')
+    plt.ylim(0,50)
+    plt.xticks(rotation=45)
+    ax2.yaxis.set_ticklabels([])
+    ax2.set_xlabel('Frequency')
 
     # Save figure
     OutputFigureName = DEM_prefix+'_xy_plots'
     OutputFigureFormat = 'png'
     plt.savefig(OutputFigureName + '.' + OutputFigureFormat, format=OutputFigureFormat, dpi=300)
+    #plt.tight_layout()
     plt.close()
 
 if __name__ == "__main__":
