@@ -38,6 +38,7 @@ def extract_source_points(DataDirectory, catchment_shapefile, points_shapefile):
 
     # Loop through and check whether the points are in the catchments
     for i in range(n_shapes):
+        print "This catchment ID is: ", catchment_ids[i]
         catchment_id = catchment_ids[i]
         cols = [[] for i in range(3)]
         for j in range (n_points):
@@ -45,9 +46,9 @@ def extract_source_points(DataDirectory, catchment_shapefile, points_shapefile):
                 cols[0].append(point_ids[j])
                 cols[1].append(points[j].x)
                 cols[2].append(points[j].y)
-
+                
         # check for empty polygons
-        if cols:
+        if cols[0]:
             # write the csv file of points for this catchment id
             this_csv_name = DataDirectory+'MM_sources_'+str(catchment_id)+'.csv'
             with open(this_csv_name, 'wb') as f:
