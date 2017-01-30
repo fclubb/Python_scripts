@@ -17,13 +17,9 @@ def extract_source_points(DataDirectory, catchment_shapefile, points_shapefile):
     catchment_ids = []
     # read in the catchment shapefile
     with collection (DataDirectory+catchment_shapefile, 'r') as input:
-        #schema = input.schema.copy()
         for f in input:
-            #poly = Polygon(shape(f['geometry']))
             shapes.append(Polygon(shape(f['geometry'])))
             catchment_ids.append(f['properties']['OBJECTID'])
-            #poly_x, poly_y = poly.exterior.xy
-            #ax.plot(poly_x, poly_y, color='blue', linewidth=3)
 
     # read in the hydro points
     with collection (DataDirectory+points_shapefile, 'r') as input:
@@ -32,18 +28,15 @@ def extract_source_points(DataDirectory, catchment_shapefile, points_shapefile):
         for p in input:
             # only append the sources
             if p['properties']['HYDRONODE_'] == 'source':
-                #point_x = p['geometry']['coordinates'][0]
-                #point_y = p['geometry']['coordinates'][1]
                 points.append(Point(p['geometry']['coordinates'][0], p['geometry']['coordinates'][1]))
                 point_ids.append(p['properties']['OBJECTID'])
-                #ax.scatter(point_x, point_y, color='red')
 
     n_points = len(points)
     n_shapes = len(shapes)
     print "Number of sources: ", n_points
     print "Number of catchments: ", n_shapes
 
-    # more efficient way of looping? This only loops through all the catchments once rather than having to do this multiple times.
+    # Loop through and check whether the points are in the catchments
     for i in range(n_shapes):
         catchment_id = catchment_ids[i]
         cols = [[] for i in range(3)]
@@ -53,7 +46,9 @@ def extract_source_points(DataDirectory, catchment_shapefile, points_shapefile):
                 cols[1].append(points[j].x)
                 cols[2].append(points[j].y)
 
+        # check for empty polygons
         if cols:
+            # write the csv file of points for this catchment id
             this_csv_name = DataDirectory+'MM_sources_'+str(catchment_id)+'.csv'
             with open(this_csv_name, 'wb') as f:
                 writer = csv.writer(f)
