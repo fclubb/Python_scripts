@@ -15,7 +15,7 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
     """
 
     from fiona import collection
-    from shapely.geometry import shape, Point, MultiLineString, mapping
+    from shapely.geometry import shape, Point, LineString, mapping
 
     lines = []
     points = []
@@ -23,7 +23,7 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
     # read in the baseline shapefile
     c = collection(DataDirectory+baseline_shapefile, 'r')
     rec = c.next()
-    line = MultiLineString(shape(rec['geometry']))
+    line = LineString(shape(rec['geometry']))
     # get the coordinate system from the input shapefile
     crs = c.crs
 
@@ -54,5 +54,5 @@ def get_points_along_line(DataDirectory, baseline_shapefile, distance, output_sh
 
 if __name__ == '__main__':
 
-    DataDirectory = '/home/s0923330/Datastore/DEMs_for_analysis/eel_river/'
-    get_points_along_line(DataDirectory,baseline_shapefile='Eel_baseline.shp',distance=100,output_shapefile='Eel_baseline_points_100m.shp')
+    DataDirectory = '/home/s0923330/Datastore/Swath/'
+    get_points_along_line(DataDirectory,baseline_shapefile='1_UTM_line.shp',distance=90,output_shapefile='1_UTM_points.shp')
