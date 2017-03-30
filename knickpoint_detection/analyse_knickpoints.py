@@ -42,7 +42,7 @@ def get_data_columns_from_csv(DataDirectory, csv_name, kp_threshold, columns):
     below this will be excluded)
     FJC 29/03/17
     """
-    column_lists = [[]]
+    column_lists = []
     df = read_MChi_file(DataDirectory, csv_name, kp_threshold)
     for column_name in columns:
         print("I'm returning the "+column_name+" values as a list")
@@ -99,32 +99,47 @@ def plot_knickpoint_elevations(DataDirectory, csv_name, kp_threshold):
     plt.savefig(DataDirectory+write_name+"."+file_ext,dpi=300)
     plt.clf()
 
-def plot_elevation_distance(DataDirectory, csv_name, kp_threshold):
+def knickpoint_plots_for_basins(DataDirectory, csv_name, kp_threshold):
     """
-    This function creates a plot of knickpoint elevations against distance from the outlet
-    of the basin.  Creates a separate plot for each basin at the moment.
+    This function creates subplots of knickpoint characteristics for each individual
+    basin.
     FJC 29/03/17
     """
     # read in data from the csv to lists
-    columns = ["elevation", "flow distance", "file_from_combine"]
+    columns = ["elevation", "flow distance", "drainage_area", "kp_magnitude", "kp_sign", "file_from_combine"]
     column_lists = get_data_columns_from_csv(DataDirectory, csv_name, kp_threshold, columns)
-    # elevation = column_lists[0]
-    # flow_distance = column_lists[1]
-    basin_id = column_lists[2]
+    print(len(column_lists))
+    elevation = column_lists[0]
+    flow_distance = column_lists[1]
+    drainage_area = column_lists[2]
+    kp_magnitude = column_lists[3]
+    kp_sign = column_lists[4]
+    basin_id = column_lists[5]
     #list_of_lists = zip(elevation,flow_distance,basin_id)
-    print column_lists
+    #print column_lists
 
     # loop through and get a plot for each basin id
     ids = set(basin_id)
     for id in ids:
         print("This basin id is: "+str(id))
-        these_lists = [(x,y,z) for (x,y,z) in column_lists if z == id]
-        print these_lists
+        these_lists = [(a,b,c,d,e,f) for (a,b,c,d,e,f) in zip(elevation,flow_distance,drainage_area,kp_magnitude,kp_sign,basin_id) if f == id]
+        this_elev, this_distance, this_area, this_magnitude, this_sign, this_id = zip(*these_lists)
 
+        fig,ax = plt.subplots(nrows=2,ncols=2,figsize=(10,12))
+        ax = ax.ravel()
+        for i in range(len(ax)):
+            ax[i].scatter(this_distance,this_elev,c="k")
+            ax.set_xlabel('Flow distance (m)')
+            ax.set_ylabel('Elevation (m)')
+
+        write_name = "knickpoint_plots_basin_"
+        file_ext = "png"
+        plt.savefig(DataDirectory+write_name+str(id)+"."+file_ext,dpi=100)
+        plt.close()
 
 DataDirectory = '/home/s0923330/LSDTopoData/Sierra_Nevada_kn/'
 baseName = "combined"
 csv_name = baseName + "_MChi.csv"
-kp_threshold = 25 # every knickpoint below this will be erased
+kp_threshold = 100 # every knickpoint below this will be erased
 plot_elevation_distance(DataDirectory,csv_name, kp_threshold)
 #get_data_column_from_csv(DataDirectory,csv_name,kp_threshold,column_name="latitude")
